@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Salve a Menina do Muro - Quiz Matemático</title>
+    <!-- Carregamento do Tailwind CSS para utilitários de layout responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte moderna e limpa (Plus Jakarta Sans) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos Base e Paleta Flat Design */
+        :root {
+            --sky-top: #E0F2FE;
+            --sky-bottom: #F0F9FF;
+            --wall-main: #FFFFFF;
+            --wall-shadow: #E2E8F0;
+            --wall-mortar: #CBD5E1;
+            --river-light: #38BDF8;
+            --river-mid: #0284C7;
+            --river-dark: #0369A1;
+            --accent-primary: #2563EB;
+            --accent-success: #10B981;
+            --accent-danger: #EF4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+            margin: 0;
+            padding: 0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Animações seguras (sem conflitar com atributo SVG transform em peixes/jacarés) */
+        @keyframes floatCloud {
+            0%, 100% { transform: translateX(0px); }
+            50% { transform: translateX(16px); }
+        }
+
+        @keyframes shakeWall {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        @keyframes brickCrumble {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(90px) rotate(14deg) scale(0.88);
+            }
+        }
+
+        @keyframes girlIdle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2.5px); }
+        }
+
+        @keyframes girlBobWater {
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50% { transform: translateY(5px) rotate(3deg); }
+        }
+
+        @keyframes splashPop {
+            0% { transform: scale(0.3); opacity: 0.95; }
+            70% { transform: scale(1.15); opacity: 0.85; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        .cloud-anim-1 { animation: floatCloud 9s ease-in-out infinite; }
+        .cloud-anim-2 { animation: floatCloud 12s ease-in-out infinite reverse; }
+        .shake-effect { animation: shakeWall 0.45s cubic-bezier(.36,.07,.19,.97) both; }
+
+        /* Transição suave para a posição vertical da menina */
+        #girl-group {
+            transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Transição suave para o movimento das pupilas dos jacarés */
+        .croc-pupil {
+            transition: cx 0.45s ease-out, cy 0.45s ease-out;
+        }
+
+        .girl-idle-anim {
+            animation: girlIdle 2.2s ease-in-out infinite;
+        }
+
+        .girl-water-anim {
+            animation: girlBobWater 2s ease-in-out infinite;
+        }
+
+        .layer-crumbling {
+            animation: brickCrumble 0.65s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .splash-anim {
+            animation: splashPop 0.8s ease-out forwards;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        /* Estilo dos botões de alternativa */
+        .option-btn {
+            transition: all 0.18s ease;
+            box-shadow: 0 3px 0 #CBD5E1;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 0 #94A3B8;
+            border-color: #3B82F6;
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #94A3B8;
+        }
+        .option-correct {
+            background-color: #10B981 !important;
+            border-color: #059669 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 3px 0 #047857 !important;
+        }
+        .option-wrong {
+            background-color: #EF4444 !important;
+            border-color: #DC2626 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 3px 0 #B91C1C !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex items-center justify-center p-2 sm:p-4">
+
+    <!-- Container Principal Responsivo -->
+    <main id="app-container" class="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden flex flex-col">
+
+        <!-- Cabeçalho Minimalista (HUD) -->
+        <header id="game-hud" class="hidden px-4 sm:px-6 py-3 bg-white border-b border-slate-100 flex items-center justify-between gap-2">
+            <!-- Progresso das Perguntas -->
+            <div class="flex items-center gap-2.5">
+                <span id="mode-badge" class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
+                    Misto
+                </span>
+                <div class="text-sm font-bold text-slate-600">
+                    Questão <span id="question-counter" class="text-slate-900">1</span>/10
+                </div>
+            </div>
+
+            <!-- Barra de Progresso Limpa -->
+            <div class="hidden sm:block flex-1 max-w-xs mx-4 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-blue-500 rounded-full transition-all duration-300" style="width: 10%;"></div>
+            </div>
+
+            <!-- Integridade do Muro (5 Camadas) e Pontuação -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <div class="flex items-center gap-1" title="Camadas intactas do muro">
+                    <span class="text-xs font-semibold text-slate-400 mr-1 hidden xs:inline">Muro:</span>
+                    <div id="wall-hearts" class="flex gap-1">
+                        <span class="w-3 h-3 rounded-sm bg-slate-200 border border-slate-400 transition-colors"></span>
+                        <span class="w-3 h-3 rounded-sm bg-slate-200 border border-slate-400 transition-colors"></span>
+                        <span class="w-3 h-3 rounded-sm bg-slate-200 border border-slate-400 transition-colors"></span>
+                        <span class="w-3 h-3 rounded-sm bg-slate-200 border border-slate-400 transition-colors"></span>
+                        <span class="w-3 h-3 rounded-sm bg-slate-200 border border-slate-400 transition-colors"></span>
+                    </div>
+                </div>
+                <div class="bg-amber-50 text-amber-700 font-extrabold text-sm px-3 py-1 rounded-full border border-amber-200/70">
+                    <span id="score-display">0</span> pts
+                </div>
+            </div>
+        </header>
+
+        <!-- TELA INICIAL (SELEÇÃO DE MODO) -->
+        <section id="start-screen" class="p-6 sm:p-10 flex flex-col items-center text-center">
+            <!-- Ilustração Miniatura Flat Design (viewBox 0 0 400 200, água a partir de y=152) -->
+            <div class="w-full max-w-md h-44 sm:h-52 rounded-2xl overflow-hidden mb-6 border border-sky-100 shadow-inner bg-sky-50">
+                <svg id="start-scene-svg" viewBox="0 0 400 200" class="w-full h-full block">
+                    <defs>
+                        <linearGradient id="startSkyGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#BAE6FD"/>
+                            <stop offset="100%" stop-color="#F0F9FF"/>
+                        </linearGradient>
+                        <linearGradient id="startRiverGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#0284C7"/>
+                            <stop offset="100%" stop-color="#0369A1"/>
+                        </linearGradient>
+                        <!-- ClipPath rigoroso garantindo que peixes, bolhas e corpos submersos nunca saiam da água (y>=152) -->
+                        <clipPath id="start-river-clip">
+                            <rect x="0" y="152" width="400" height="48"/>
+                        </clipPath>
+                    </defs>
+
+                    <!-- Céu Flat -->
+                    <rect width="400" height="200" fill="url(#startSkyGrad)"/>
+                    <!-- Sol Minimalista -->
+                    <circle cx="340" cy="40" r="21" fill="#FDE047"/>
+                    <circle cx="340" cy="40" r="27" fill="#FDE047" opacity="0.25"/>
+                    <!-- Nuvem -->
+                    <g class="cloud-anim-1" fill="#FFFFFF" opacity="0.9">
+                        <rect x="45" y="28" width="54" height="16" rx="8"/>
+                        <circle cx="62" cy="28" r="11"/>
+                        <circle cx="78" cy="26" r="13"/>
+                    </g>
+
+                    <!-- CAMADA 1 DO RIO: Fundo escuro a partir de y=152 -->
+                    <rect x="0" y="152" width="400" height="48" fill="url(#startRiverGrad)"/>
+
+                    <!-- Base submersa do muro -->
+                    <rect x="143" y="152" width="114" height="48" fill="#64748B"/>
+                    <rect x="143" y="152" width="114" height="48" fill="#0369A1" opacity="0.45"/>
+
+                    <!-- Muro Branco -->
+                    <rect x="145" y="90" width="110" height="64" rx="4" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                    <line x1="145" y1="111" x2="255" y2="111" stroke="#E2E8F0" stroke-width="2"/>
+                    <line x1="145" y1="132" x2="255" y2="132" stroke="#E2E8F0" stroke-width="2"/>
+                    <line x1="182" y1="90" x2="182" y2="111" stroke="#E2E8F0" stroke-width="2"/>
+                    <line x1="218" y1="111" x2="218" y2="132" stroke="#E2E8F0" stroke-width="2"/>
+
+                    <!-- Menina no Topo -->
+                    <g transform="translate(200, 90)">
+                        <rect x="-10" y="-2" width="7" height="14" rx="3.5" fill="#3B82F6"/>
+                        <rect x="3" y="-2" width="7" height="14" rx="3.5" fill="#3B82F6"/>
+                        <path d="M-12,-24 L12,-24 L15,-2 L-15,-2 Z" fill="#F43F5E"/>
+                        <circle cx="0" cy="-36" r="13" fill="#FDBA74"/>
+                        <path d="M-13,-37 C-13,-52 13,-52 13,-37 C15,-29 14,-22 11,-22 C11,-32 8,-40 0,-40 C-8,-40 -11,-32 -11,-22 C-14,-22 -15,-29 -13,-37 Z" fill="#78350F"/>
+                        <circle cx="-4.5" cy="-36" r="1.8" fill="#1E293B"/>
+                        <circle cx="4.5" cy="-36" r="1.8" fill="#1E293B"/>
+                        <path d="M-3,-31 Q0,-28 3,-31" stroke="#1E293B" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    </g>
+
+                    <!-- CAMADA 2 DO RIO (SUBMERSA COM CLIP-PATH): Corpos dos jacarés + 2 peixes animados via JS + bolhas -->
+                    <g clip-path="url(#start-river-clip)">
+                        <!-- Corpo Submerso Jacaré Esquerdo -->
+                        <g id="start-croc-left-body">
+                            <path d="M12,168 Q38,154 78,156 L112,158 Q114,169 102,174 Q60,178 18,176 Z" fill="#14532D"/>
+                            <path d="M62,172 L72,188 L80,186 L74,171 Z" fill="#166534"/>
+                            <path d="M36,174 L30,188 L38,189 L45,175 Z" fill="#166534"/>
+                        </g>
+
+                        <!-- Corpo Submerso Jacaré Direito -->
+                        <g id="start-croc-right-body">
+                            <path d="M388,168 Q362,154 322,156 L288,158 Q286,169 298,174 Q340,178 382,176 Z" fill="#14532D"/>
+                            <path d="M338,172 L328,188 L320,186 L326,171 Z" fill="#166534"/>
+                            <path d="M364,174 L370,188 L362,189 L355,175 Z" fill="#166534"/>
+                        </g>
+
+                        <!-- Peixe/Piranha 1 da Tela Inicial (desenhado centrado em 0,0 voltado para a direita) -->
+                        <g id="start-fish-1" transform="translate(80, 175) scale(1, 1)">
+                            <ellipse cx="0" cy="0" rx="10" ry="6" fill="#EF4444"/>
+                            <polygon points="-9,0 -16,-5 -16,5" fill="#DC2626"/>
+                            <polygon points="-2,-5 3,-9 5,-4" fill="#B91C1C"/>
+                            <circle cx="5" cy="-1.5" r="2" fill="#FFFFFF"/>
+                            <circle cx="5.7" cy="-1.5" r="0.9" fill="#0F172A"/>
+                            <polygon points="7,2 8.5,0.5 10,2" fill="#FFFFFF"/>
+                        </g>
+
+                        <!-- Peixe/Piranha 2 da Tela Inicial (desenhado centrado em 0,0 voltado para a direita) -->
+                        <g id="start-fish-2" transform="translate(310, 188) scale(-1, 1)">
+                            <ellipse cx="0" cy="0" rx="9" ry="5.2" fill="#F97316"/>
+                            <polygon points="-8,0 -14,-4.5 -14,4.5" fill="#EA580C"/>
+                            <polygon points="-2,-4.5 2,-8 4,-3.5" fill="#C2410C"/>
+                            <circle cx="4.5" cy="-1.2" r="1.8" fill="#FFFFFF"/>
+                            <circle cx="5.2" cy="-1.2" r="0.8" fill="#0F172A"/>
+                        </g>
+
+                        <!-- Bolhas subindo (animadas via JS) -->
+                        <circle id="start-bubble-1" cx="95" cy="182" r="2" fill="#BAE6FD" opacity="0.7"/>
+                        <circle id="start-bubble-2" cx="295" cy="188" r="1.8" fill="#E0F2FE" opacity="0.65"/>
+                    </g>
+
+                    <!-- CAMADA 3 DO RIO: Água intermediária translúcida cobrindo peixes e corpos dos jacarés -->
+                    <rect x="0" y="152" width="400" height="48" fill="#0EA5E9" opacity="0.38"/>
+
+                    <!-- CAMADA 4 DO RIO: Cabeças dos 2 jacarés emergindo na superfície e olhando para a menina -->
+                    <!-- Jacaré Esquerdo (Superfície) -->
+                    <g id="start-croc-left-head">
+                        <ellipse cx="96" cy="154" rx="34" ry="4" fill="none" stroke="#E0F2FE" stroke-width="1.6" opacity="0.85"/>
+                        <polygon points="48,153 53,148 58,153" fill="#15803D"/>
+                        <polygon points="60,153 65,148 70,153" fill="#15803D"/>
+                        <path d="M72,154 Q85,144 118,139 Q124,139 124,144 Q122,149 95,155 Z" fill="#16A34A"/>
+                        <circle cx="118" cy="141" r="1.3" fill="#14532D"/>
+                        <path d="M96,151 L120,145" stroke="#14532D" stroke-width="1.2" stroke-linecap="round"/>
+                        <polygon points="104,149 106,152 108,148" fill="#FFFFFF"/>
+                        <polygon points="112,147 114,150 116,146" fill="#FFFFFF"/>
+                        <!-- Olhos olhando para cima/centro (menina) -->
+                        <circle cx="84" cy="144" r="4.6" fill="#15803D"/>
+                        <circle cx="84" cy="144" r="2.9" fill="#FEF08A"/>
+                        <circle cx="85.2" cy="142.8" r="1.3" fill="#0F172A"/>
+                        <circle cx="94" cy="145" r="4.6" fill="#16A34A"/>
+                        <circle cx="94" cy="145" r="2.9" fill="#FEF08A"/>
+                        <circle cx="95.2" cy="143.8" r="1.3" fill="#0F172A"/>
+                    </g>
+
+                    <!-- Jacaré Direito (Superfície) -->
+                    <g id="start-croc-right-head">
+                        <ellipse cx="304" cy="154" rx="34" ry="4" fill="none" stroke="#E0F2FE" stroke-width="1.6" opacity="0.85"/>
+                        <polygon points="352,153 347,148 342,153" fill="#15803D"/>
+                        <polygon points="340,153 335,148 330,153" fill="#15803D"/>
+                        <path d="M328,154 Q315,144 282,139 Q276,139 276,144 Q278,149 305,155 Z" fill="#16A34A"/>
+                        <circle cx="282" cy="141" r="1.3" fill="#14532D"/>
+                        <path d="M304,151 L280,145" stroke="#14532D" stroke-width="1.2" stroke-linecap="round"/>
+                        <polygon points="296,149 294,152 292,148" fill="#FFFFFF"/>
+                        <polygon points="288,147 286,150 284,146" fill="#FFFFFF"/>
+                        <!-- Olhos olhando para cima/centro (menina) -->
+                        <circle cx="316" cy="144" r="4.6" fill="#15803D"/>
+                        <circle cx="316" cy="144" r="2.9" fill="#FEF08A"/>
+                        <circle cx="314.8" cy="142.8" r="1.3" fill="#0F172A"/>
+                        <circle cx="306" cy="145" r="4.6" fill="#16A34A"/>
+                        <circle cx="306" cy="145" r="2.9" fill="#FEF08A"/>
+                        <circle cx="304.8" cy="143.8" r="1.3" fill="#0F172A"/>
+                    </g>
+
+                    <!-- CAMADA 5 DO RIO: Onda frontal translúcida (animada via JS) -->
+                    <g id="start-front-wave">
+                        <path d="M-40,156 Q0,161 40,156 T120,156 T200,156 T280,156 T360,156 T440,156 L440,200 L-40,200 Z" fill="#38BDF8" opacity="0.46"/>
+                        <path d="M-40,156 Q0,161 40,156 T120,156 T200,156 T280,156 T360,156 T440,156" fill="none" stroke="#BAE6FD" stroke-width="1.5" opacity="0.65"/>
+                    </g>
+                </svg>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                Salve a Menina do Muro!
+            </h1>
+            <p class="text-slate-500 text-sm sm:text-base max-w-lg mb-7 leading-relaxed">
+                Responda corretamente aos desafios de <strong class="text-slate-700">Multiplicação</strong> e <strong class="text-slate-700">Razões Trigonométricas</strong> para manter o muro branco inteiro e protegê-la do rio cheio de jacarés e piranhas.
+            </p>
+
+            <!-- Botões de Seleção de Modo -->
+            <div class="w-full max-w-md grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <button onclick="startGame('multiplicacao')" class="p-4 rounded-2xl border-2 border-slate-200 hover:border-blue-500 bg-white hover:bg-blue-50/40 transition-all flex flex-col items-center gap-1.5 group cursor-pointer">
+                    <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-extrabold text-lg group-hover:scale-110 transition-transform">×</span>
+                    <span class="font-bold text-slate-800 text-sm">Multiplicação</span>
+                    <span class="text-xs text-slate-400">Tabuada e cálculos</span>
+                </button>
+
+                <button onclick="startGame('trigonometria')" class="p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-500 bg-white hover:bg-indigo-50/40 transition-all flex flex-col items-center gap-1.5 group cursor-pointer">
+                    <span class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-base group-hover:scale-110 transition-transform">sen θ</span>
+                    <span class="font-bold text-slate-800 text-sm">Trigonometria</span>
+                    <span class="text-xs text-slate-400">Sen, Cos e Tan</span>
+                </button>
+
+                <button onclick="startGame('misto')" class="p-4 rounded-2xl border-2 border-blue-500 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 transition-all flex flex-col items-center gap-1.5 group cursor-pointer">
+                    <span class="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-extrabold text-lg group-hover:scale-110 transition-transform">★</span>
+                    <span class="font-bold text-sm">Desafio Misto</span>
+                    <span class="text-xs text-blue-100">Os dois temas</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- TELA PRINCIPAL DO JOGO (CENÁRIO + PERGUNTA) -->
+        <section id="play-screen" class="hidden flex-col lg:flex-row">
+
+            <!-- Lado Esquerdo / Topo: Cenário Interativo Flat Design -->
+            <div id="scene-wrapper" class="w-full lg:w-1/2 bg-sky-100 relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200/80 flex items-center justify-center">
+                <!-- SVG Responsivo do Cenário (viewBox 0 0 420 340, água a partir de y=272) -->
+                <svg id="game-scene" viewBox="0 0 420 340" class="w-full h-64 sm:h-72 lg:h-full max-h-[420px] block">
+                    <defs>
+                        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#BAE6FD"/>
+                            <stop offset="100%" stop-color="#F0F9FF"/>
+                        </linearGradient>
+                        <linearGradient id="riverDeepGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#0284C7"/>
+                            <stop offset="55%" stop-color="#0369A1"/>
+                            <stop offset="100%" stop-color="#075985"/>
+                        </linearGradient>
+                        <!-- ClipPath rigoroso da área do rio (y=272, height=68) -->
+                        <clipPath id="game-river-clip">
+                            <rect x="0" y="272" width="420" height="68"/>
+                        </clipPath>
+                    </defs>
+
+                    <!-- Céu Limpo -->
+                    <rect width="420" height="340" fill="url(#skyGrad)"/>
+
+                    <!-- Sol Minimalista -->
+                    <circle cx="360" cy="48" r="24" fill="#FDE047"/>
+                    <circle cx="360" cy="48" r="31" fill="#FDE047" opacity="0.25"/>
+
+                    <!-- Nuvens Minimalistas -->
+                    <g class="cloud-anim-1" fill="#FFFFFF" opacity="0.9">
+                        <rect x="35" y="34" width="64" height="18" rx="9"/>
+                        <circle cx="54" cy="34" r="13"/>
+                        <circle cx="74" cy="31" r="15"/>
+                    </g>
+                    <g class="cloud-anim-2" fill="#FFFFFF" opacity="0.75">
+                        <rect x="235" y="64" width="48" height="14" rx="7"/>
+                        <circle cx="250" cy="64" r="10"/>
+                        <circle cx="265" cy="62" r="11"/>
+                    </g>
+
+                    <!-- CAMADA 1 DO RIO: Fundo escuro a partir de y=272 -->
+                    <rect x="0" y="272" width="420" height="68" fill="url(#riverDeepGrad)"/>
+                    <path d="M0,328 Q70,320 140,328 T280,328 T420,326 L420,340 L0,340 Z" fill="#0C4A6E" opacity="0.45"/>
+
+                    <!-- Base Submersa de Apoio do Muro no Fundo do Rio -->
+                    <rect x="132" y="275" width="156" height="65" fill="#64748B"/>
+                    <rect x="132" y="275" width="156" height="65" fill="#0369A1" opacity="0.45"/>
+
+                    <!-- MURO BRANCO EM 5 CAMADAS (De baixo para cima: Camada 1 até Camada 5 no topo) -->
+                    <!-- Cada camada tem 26px de altura. Base em Y=275. Topo inicial em Y=145 -->
+                    <g id="wall-container">
+                        <!-- Camada 1 (Base: Y=249 a 275) -->
+                        <g id="wall-layer-1" class="wall-layer">
+                            <rect x="136" y="249" width="48" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="184" y="249" width="52" height="26" rx="2" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="236" y="249" width="48" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                        </g>
+
+                        <!-- Camada 2 (Y=223 a 249) -->
+                        <g id="wall-layer-2" class="wall-layer">
+                            <rect x="136" y="223" width="36" height="26" rx="2" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="172" y="223" width="52" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="224" y="223" width="60" height="26" rx="2" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+                        </g>
+
+                        <!-- Camada 3 (Y=197 a 223) -->
+                        <g id="wall-layer-3" class="wall-layer">
+                            <rect x="136" y="197" width="50" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="186" y="197" width="48" height="26" rx="2" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="234" y="197" width="50" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                        </g>
+
+                        <!-- Camada 4 (Y=171 a 197) -->
+                        <g id="wall-layer-4" class="wall-layer">
+                            <rect x="136" y="171" width="38" height="26" rx="2" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="174" y="171" width="54" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="228" y="171" width="56" height="26" rx="2" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+                        </g>
+
+                        <!-- Camada 5 (Topo inicial: Y=145 a 171) -->
+                        <g id="wall-layer-5" class="wall-layer">
+                            <rect x="136" y="145" width="48" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="184" y="145" width="52" height="26" rx="2" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+                            <rect x="236" y="145" width="48" height="26" rx="2" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                            <!-- Borda superior sutil -->
+                            <rect x="134" y="143" width="152" height="5" rx="2.5" fill="#E2E8F0"/>
+                        </g>
+                    </g>
+
+                    <!-- CAMADA 2 DO RIO (SUBMERSA COM CLIP-PATH): Corpos dos jacarés + 3 peixes animados via JS + bolhas -->
+                    <g id="underwater-layer" clip-path="url(#game-river-clip)">
+                        <!-- Corpo Submerso do Jacaré Esquerdo (y=282..328) -->
+                        <g id="croc-left-body">
+                            <!-- Cauda e dorso mergulhados -->
+                            <path d="M12,300 Q34,282 70,282 L120,284 Q124,296 110,304 Q68,312 24,312 Q12,310 12,300 Z" fill="#14532D"/>
+                            <!-- Pata dianteira submersa -->
+                            <path d="M78,300 L90,322 L100,320 L92,300 Z" fill="#166534"/>
+                            <circle cx="93" cy="323" r="3" fill="#166534"/>
+                            <circle cx="100" cy="321" r="2.8" fill="#166534"/>
+                            <!-- Pata traseira submersa -->
+                            <path d="M40,304 L34,324 L43,325 L50,305 Z" fill="#166534"/>
+                            <!-- Listras sutis da cauda submersa -->
+                            <path d="M28,294 L32,306 M44,290 L48,304 M60,288 L64,302" stroke="#052E16" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
+                        </g>
+
+                        <!-- Corpo Submerso do Jacaré Direito (espelhado, y=282..328) -->
+                        <g id="croc-right-body">
+                            <path d="M408,300 Q386,282 350,282 L300,284 Q296,296 310,304 Q352,312 396,312 Q408,310 408,300 Z" fill="#14532D"/>
+                            <!-- Pata dianteira submersa -->
+                            <path d="M342,300 L330,322 L320,320 L328,300 Z" fill="#166534"/>
+                            <circle cx="327" cy="323" r="3" fill="#166534"/>
+                            <circle cx="320" cy="321" r="2.8" fill="#166534"/>
+                            <!-- Pata traseira submersa -->
+                            <path d="M380,304 L386,324 L377,325 L370,305 Z" fill="#166534"/>
+                            <!-- Listras sutis da cauda submersa -->
+                            <path d="M392,294 L388,306 M376,290 L372,304 M360,288 L356,302" stroke="#052E16" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
+                        </g>
+
+                        <!-- Peixe 1: Piranha Vermelha (centrada em 0,0 voltada para a direita, animada via JS em y≈296) -->
+                        <g id="game-fish-1" transform="translate(310, 296) scale(-1, 1)">
+                            <ellipse cx="0" cy="0" rx="12.5" ry="7.2" fill="#EF4444"/>
+                            <polygon points="-11,0 -20,-6 -20,6" fill="#DC2626"/>
+                            <polygon points="-3,-6 3,-10.5 6,-5" fill="#B91C1C"/>
+                            <circle cx="6" cy="-2" r="2.4" fill="#FFFFFF"/>
+                            <circle cx="6.8" cy="-2" r="1.1" fill="#0F172A"/>
+                            <path d="M6,3 L12,2.5" stroke="#7F1D1D" stroke-width="1.4" stroke-linecap="round"/>
+                            <polygon points="7.5,2.8 9,1 10.5,2.7" fill="#FFFFFF"/>
+                        </g>
+
+                        <!-- Peixe 2: Peixe Laranja (centrado em 0,0 voltado para a direita, animado via JS em y≈312) -->
+                        <g id="game-fish-2" transform="translate(95, 312) scale(1, 1)">
+                            <ellipse cx="0" cy="0" rx="11.5" ry="6.5" fill="#F97316"/>
+                            <polygon points="-10,0 -18,-5.5 -18,5.5" fill="#EA580C"/>
+                            <polygon points="-2,-5.5 3,-9.5 5,-4.5" fill="#C2410C"/>
+                            <path d="M-2,-5 Q1,0 -2,5" stroke="#FDBA74" stroke-width="1.6" fill="none" opacity="0.7"/>
+                            <circle cx="5.5" cy="-1.8" r="2.2" fill="#FFFFFF"/>
+                            <circle cx="6.3" cy="-1.8" r="1" fill="#0F172A"/>
+                            <polygon points="7.5,2.2 9,0.7 10.5,2.2" fill="#FFFFFF"/>
+                        </g>
+
+                        <!-- Peixe 3: Peixe Azul-Turquesa e Dourado (centrado em 0,0 voltado para a direita, animado via JS em y≈325) -->
+                        <g id="game-fish-3" transform="translate(210, 325) scale(1, 1)">
+                            <ellipse cx="0" cy="0" rx="10.5" ry="5.8" fill="#14B8A6"/>
+                            <polygon points="-9,0 -16,-5 -16,5" fill="#F59E0B"/>
+                            <polygon points="-2,-5 2,-8.5 5,-4" fill="#FBBF24"/>
+                            <path d="M-1,-4.5 Q2,0 -1,4.5" stroke="#FDE047" stroke-width="1.6" fill="none"/>
+                            <circle cx="5" cy="-1.5" r="2" fill="#FFFFFF"/>
+                            <circle cx="5.7" cy="-1.5" r="0.9" fill="#0F172A"/>
+                        </g>
+
+                        <!-- Bolhas subindo (animadas via JS dentro do clip-path) -->
+                        <circle id="game-bubble-1" cx="120" cy="316" r="2.2" fill="#BAE6FD" opacity="0.7"/>
+                        <circle id="game-bubble-2" cx="290" cy="322" r="1.9" fill="#E0F2FE" opacity="0.7"/>
+                        <circle id="game-bubble-3" cx="205" cy="328" r="1.6" fill="#BAE6FD" opacity="0.65"/>
+                        <circle id="game-bubble-4" cx="65" cy="306" r="1.8" fill="#E0F2FE" opacity="0.6"/>
+                    </g>
+
+                    <!-- CAMADA 3 DO RIO: Camada intermediária translúcida passando POR CIMA dos peixes e corpos dos jacarés -->
+                    <rect x="0" y="272" width="420" height="68" fill="#0EA5E9" opacity="0.38"/>
+
+                    <!-- CAMADA 4 DO RIO: Cabeças e olhos dos 2 jacarés emergindo na superfície + marolas brancas -->
+                    <!-- JACARÉ ESQUERDO (Superfície, x≈60..135, olhando para a menina no muro) -->
+                    <g id="croc-left-head">
+                        <!-- Anéis de marola branca na linha d'água -->
+                        <ellipse cx="96" cy="276" rx="42" ry="5" fill="none" stroke="#FFFFFF" stroke-width="1.7" opacity="0.78"/>
+                        <ellipse cx="102" cy="277" rx="25" ry="3.2" fill="none" stroke="#E0F2FE" stroke-width="1.2" opacity="0.7"/>
+
+                        <!-- Escamas das costas rompendo a superfície -->
+                        <path d="M46,276 Q62,268 80,274 Z" fill="#16A34A"/>
+                        <polygon points="52,273 57,267 62,272" fill="#15803D"/>
+                        <polygon points="64,272 69,266 74,272" fill="#15803D"/>
+
+                        <!-- Cabeça e focinho levemente inclinado para cima (y≈264..280) -->
+                        <path d="M74,277 Q85,264 100,263 L130,256 Q137,255 137,261 Q136,267 126,271 L98,278 Z" fill="#16A34A"/>
+                        <!-- Narina no topo do focinho -->
+                        <circle cx="131" cy="259" r="1.5" fill="#14532D"/>
+                        <!-- Boca e dentinhos brancos -->
+                        <path d="M102,273 L133,265" stroke="#14532D" stroke-width="1.5" stroke-linecap="round"/>
+                        <polygon points="110,271 112.5,274.5 115,269.5" fill="#FFFFFF"/>
+                        <polygon points="120,268.5 122.5,272 125,267" fill="#FFFFFF"/>
+                        <polygon points="128,266.5 130,269.5 132,265.5" fill="#FFFFFF"/>
+
+                        <!-- Olhos saltados com pupilas controladas por updateCrocEyes(girlY) -->
+                        <circle cx="90" cy="262" r="5.3" fill="#15803D"/>
+                        <circle cx="90" cy="262" r="3.4" fill="#FEF08A"/>
+                        <circle id="croc-left-pupil-1" class="croc-pupil" cx="91.1" cy="260.8" r="1.5" fill="#0F172A"/>
+
+                        <circle cx="101" cy="264" r="5.5" fill="#16A34A"/>
+                        <circle cx="101" cy="264" r="3.6" fill="#FEF08A"/>
+                        <circle id="croc-left-pupil-2" class="croc-pupil" cx="102.1" cy="262.8" r="1.6" fill="#0F172A"/>
+                    </g>
+
+                    <!-- JACARÉ DIREITO (Superfície, x≈285..360, espelhado olhando para a menina no muro) -->
+                    <g id="croc-right-head">
+                        <!-- Anéis de marola branca na linha d'água -->
+                        <ellipse cx="324" cy="276" rx="42" ry="5" fill="none" stroke="#FFFFFF" stroke-width="1.7" opacity="0.78"/>
+                        <ellipse cx="318" cy="277" rx="25" ry="3.2" fill="none" stroke="#E0F2FE" stroke-width="1.2" opacity="0.7"/>
+
+                        <!-- Escamas das costas rompendo a superfície -->
+                        <path d="M374,276 Q358,268 340,274 Z" fill="#16A34A"/>
+                        <polygon points="368,273 363,267 358,272" fill="#15803D"/>
+                        <polygon points="356,272 351,266 346,272" fill="#15803D"/>
+
+                        <!-- Cabeça e focinho levemente inclinado para cima (y≈264..280) -->
+                        <path d="M346,277 Q335,264 320,263 L290,256 Q283,255 283,261 Q284,267 294,271 L322,278 Z" fill="#16A34A"/>
+                        <!-- Narina no topo do focinho -->
+                        <circle cx="289" cy="259" r="1.5" fill="#14532D"/>
+                        <!-- Boca e dentinhos brancos -->
+                        <path d="M318,273 L287,265" stroke="#14532D" stroke-width="1.5" stroke-linecap="round"/>
+                        <polygon points="310,271 307.5,274.5 305,269.5" fill="#FFFFFF"/>
+                        <polygon points="300,268.5 297.5,272 295,267" fill="#FFFFFF"/>
+                        <polygon points="292,266.5 290,269.5 288,265.5" fill="#FFFFFF"/>
+
+                        <!-- Olhos saltados com pupilas controladas por updateCrocEyes(girlY) -->
+                        <circle cx="330" cy="262" r="5.3" fill="#15803D"/>
+                        <circle cx="330" cy="262" r="3.4" fill="#FEF08A"/>
+                        <circle id="croc-right-pupil-1" class="croc-pupil" cx="328.9" cy="260.8" r="1.5" fill="#0F172A"/>
+
+                        <circle cx="319" cy="264" r="5.5" fill="#16A34A"/>
+                        <circle cx="319" cy="264" r="3.6" fill="#FEF08A"/>
+                        <circle id="croc-right-pupil-2" class="croc-pupil" cx="317.9" cy="262.8" r="1.6" fill="#0F172A"/>
+                    </g>
+
+                    <!-- CAMADA 5: PERSONAGEM MENINA EM ESTILO FLAT DESIGN -->
+                    <!-- Posição inicial em Y=145 (topo da camada 5). A cada erro desce 26px. Ao cair vai para Y=294 -->
+                    <g id="girl-group" style="transform: translate(210px, 145px);">
+                        <g id="girl-body-anim" class="girl-idle-anim">
+                            <!-- Cabelo Traseiro -->
+                            <path d="M-17,-44 C-20,-24 -18,-14 -13,-14 L13,-14 C18,-14 20,-24 17,-44 Z" fill="#78350F"/>
+
+                            <!-- Pernas (escondidas quando está dentro da água) -->
+                            <g id="girl-legs">
+                                <rect x="-11" y="-3" width="8" height="17" rx="4" fill="#FDBA74"/>
+                                <rect x="3" y="-3" width="8" height="17" rx="4" fill="#FDBA74"/>
+                                <!-- Sapatinhos -->
+                                <rect x="-12" y="10" width="10" height="6" rx="3" fill="#1E293B"/>
+                                <rect x="2" y="10" width="10" height="6" rx="3" fill="#1E293B"/>
+                            </g>
+
+                            <!-- Braços -->
+                            <g id="girl-arms">
+                                <rect x="-19" y="-27" width="7" height="16" rx="3.5" transform="rotate(15 -15 -27)" fill="#FDBA74"/>
+                                <rect x="12" y="-27" width="7" height="16" rx="3.5" transform="rotate(-15 15 -27)" fill="#FDBA74"/>
+                            </g>
+
+                            <!-- Vestido Flat Design -->
+                            <path d="M-13,-29 L13,-29 L17,-2 L-17,-2 Z" fill="#F43F5E"/>
+                            <path d="M-13,-29 L13,-29 L10,-22 L-10,-22 Z" fill="#FB7185"/>
+
+                            <!-- Cabeça -->
+                            <circle cx="0" cy="-43" r="15.5" fill="#FDBA74"/>
+
+                            <!-- Franja e Laço -->
+                            <path d="M-15.5,-44 C-15.5,-59 15.5,-59 15.5,-44 C11,-49 4,-50 0,-47 C-4,-50 -11,-49 -15.5,-44 Z" fill="#78350F"/>
+                            <!-- Lacinho no cabelo -->
+                            <circle cx="11" cy="-54" r="3.5" fill="#38BDF8"/>
+
+                            <!-- EXPRESSÃO 1: NORMAL / FELIZ -->
+                            <g id="face-normal">
+                                <circle cx="-5.5" cy="-42" r="2.1" fill="#1E293B"/>
+                                <circle cx="5.5" cy="-42" r="2.1" fill="#1E293B"/>
+                                <!-- Bochechas -->
+                                <circle cx="-9" cy="-38.5" r="2.3" fill="#F87171" opacity="0.45"/>
+                                <circle cx="9" cy="-38.5" r="2.3" fill="#F87171" opacity="0.45"/>
+                                <!-- Sorriso -->
+                                <path d="M-4,-36.5 Q0,-33 4,-36.5" stroke="#1E293B" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                            </g>
+
+                            <!-- EXPRESSÃO 2: ASSUSTADA (Quando erra uma pergunta) -->
+                            <g id="face-scared" class="hidden">
+                                <circle cx="-5.5" cy="-42" r="3.2" fill="#FFFFFF"/>
+                                <circle cx="-5.5" cy="-42" r="1.4" fill="#1E293B"/>
+                                <circle cx="5.5" cy="-42" r="3.2" fill="#FFFFFF"/>
+                                <circle cx="5.5" cy="-42" r="1.4" fill="#1E293B"/>
+                                <!-- Boca de susto -->
+                                <ellipse cx="0" cy="-35" rx="3" ry="3.8" fill="#1E293B"/>
+                                <!-- Gotinha de suor -->
+                                <path d="M13,-48 Q15,-44 13,-42 Q11,-44 13,-48 Z" fill="#38BDF8"/>
+                            </g>
+
+                            <!-- EXPRESSÃO 3: DERROTA NO RIO (Dois 'X' nos olhos) -->
+                            <g id="face-ko" class="hidden">
+                                <!-- Olho Esquerdo X -->
+                                <line x1="-8" y1="-44.5" x2="-3" y2="-39.5" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round"/>
+                                <line x1="-3" y1="-44.5" x2="-8" y2="-39.5" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round"/>
+                                <!-- Olho Direito X -->
+                                <line x1="3" y1="-44.5" x2="8" y2="-39.5" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round"/>
+                                <line x1="8" y1="-44.5" x2="3" y2="-39.5" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round"/>
+                                <!-- Boca ondulada cômica -->
+                                <path d="M-4.5,-35 Q-2,-37 0,-35 Q2,-33 4.5,-35" stroke="#1E293B" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                            </g>
+                        </g>
+                    </g>
+
+                    <!-- Respingo de Água (Aparece ao cair no rio) -->
+                    <g id="water-splash" class="hidden" transform="translate(210, 274)">
+                        <path d="M-35,0 Q-25,-22 -12,-6 Q0,-28 12,-6 Q25,-22 35,0 Z" fill="#E0F2FE"/>
+                        <circle cx="-28" cy="-16" r="3" fill="#FFFFFF"/>
+                        <circle cx="28" cy="-16" r="3" fill="#FFFFFF"/>
+                        <circle cx="0" cy="-26" r="3.5" fill="#FFFFFF"/>
+                    </g>
+
+                    <!-- CAMADA 6 DO RIO: Onda Frontal Translúcida (animada horizontalmente via JS, cobre parcialmente a menina quando ela cai) -->
+                    <g id="game-front-wave">
+                        <path d="M-50,278 Q0,284 50,278 T150,278 T250,278 T350,278 T470,278 L470,345 L-50,345 Z" fill="#38BDF8" opacity="0.48"/>
+                        <path d="M-50,278 Q0,284 50,278 T150,278 T250,278 T350,278 T470,278" fill="none" stroke="#BAE6FD" stroke-width="1.8" opacity="0.72"/>
+                    </g>
+                </svg>
+
+                <!-- Feedback Flutuante Rápido sobre o Cenário -->
+                <div id="scene-toast" class="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-sm opacity-0 transition-opacity duration-300">
+                </div>
+            </div>
+
+            <!-- Lado Direito / Base: Área da Pergunta e Alternativas -->
+            <div class="w-full lg:w-1/2 p-5 sm:p-7 flex flex-col justify-between bg-white">
+                <div>
+                    <!-- Tag da Categoria da Questão -->
+                    <div class="flex items-center justify-between mb-3">
+                        <span id="question-topic" class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600">
+                            Multiplicação
+                        </span>
+                        <span id="streak-badge" class="hidden text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md">
+                            Sequência: 2x 🔥
+                        </span>
+                    </div>
+
+                    <!-- Apoio Visual Minimalista para Trigonometria (Triângulo Retângulo Flat) -->
+                    <div id="trig-diagram-box" class="hidden mb-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                        <svg id="trig-svg" viewBox="0 0 220 115" class="w-48 h-24">
+                            <!-- Triângulo Retângulo -->
+                            <polygon points="45,95 175,95 45,22" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2.5" stroke-linejoin="round"/>
+                            <!-- Ângulo Reto -->
+                            <polyline points="45,83 57,83 57,95" fill="none" stroke="#3B82F6" stroke-width="1.8"/>
+                            <!-- Arco do Ângulo Theta -->
+                            <path d="M150,95 A25,25 0 0,1 154,82" fill="none" stroke="#F43F5E" stroke-width="2"/>
+                            <!-- Rótulos Dinâmicos -->
+                            <text id="lbl-angle" x="136" y="88" font-size="12" font-weight="700" fill="#E11D48">θ</text>
+                            <text id="lbl-opp" x="36" y="62" font-size="11" font-weight="700" fill="#1E293B" text-anchor="end">CO</text>
+                            <text id="lbl-adj" x="110" y="110" font-size="11" font-weight="700" fill="#1E293B" text-anchor="middle">CA</text>
+                            <text id="lbl-hyp" x="120" y="52" font-size="11" font-weight="700" fill="#2563EB" text-anchor="start">HIP</text>
+                        </svg>
+                    </div>
+
+                    <!-- Enunciado da Pergunta -->
+                    <h2 id="question-text" class="text-lg sm:text-xl font-extrabold text-slate-800 leading-snug mb-5">
+                        Carregando pergunta...
+                    </h2>
+                </div>
+
+                <!-- Grid de 4 Alternativas -->
+                <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Botões gerados via JS -->
+                </div>
+
+                <!-- Explicação curta após resposta -->
+                <div id="feedback-bar" class="mt-4 min-h-[28px] flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-500">
+                    <span id="feedback-text">Escolha a resposta certa para proteger o muro.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA DE RESULTADO (VITÓRIA OU DERROTA) -->
+        <section id="end-screen" class="hidden p-7 sm:p-10 flex flex-col items-center text-center">
+            <!-- Ícone/Ilustração de Status -->
+            <div id="end-illustration" class="w-36 h-36 rounded-full flex items-center justify-center mb-5">
+                <!-- Preenchido dinamicamente -->
+            </div>
+
+            <h2 id="end-title" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
+                Fim de Jogo!
+            </h2>
+            <p id="end-subtitle" class="text-slate-500 text-sm sm:text-base max-w-md mb-6">
+                O muro desmoronou e a menina caiu no rio!
+            </p>
+
+            <!-- Resumo de Desempenho -->
+            <div class="grid grid-cols-3 gap-3 w-full max-w-md mb-7">
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <div class="text-xs text-slate-400 font-semibold">Pontuação</div>
+                    <div id="final-score" class="text-xl font-extrabold text-blue-600 mt-0.5">0</div>
+                </div>
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <div class="text-xs text-slate-400 font-semibold">Acertos</div>
+                    <div id="final-hits" class="text-xl font-extrabold text-emerald-600 mt-0.5">0/10</div>
+                </div>
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <div class="text-xs text-slate-400 font-semibold">Muro Restante</div>
+                    <div id="final-wall" class="text-xl font-extrabold text-slate-700 mt-0.5">0/5</div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                <button onclick="restartSameMode()" class="flex-1 py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-md shadow-blue-200 transition-all cursor-pointer">
+                    Jogar Novamente
+                </button>
+                <button onclick="returnToMenu()" class="py-3.5 px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm sm:text-base transition-all cursor-pointer">
+                    Trocar Tema
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * ESTADO GLOBAL DO JOGO
+         */
+        const TOTAL_QUESTIONS = 10;
+        const MAX_WALL_LAYERS = 5;
+        const LAYER_HEIGHT = 26; // Altura em pixels SVG de cada camada do muro
+        const BASE_GIRL_Y = 145; // Posição Y inicial no topo do muro
+
+        let state = {
+            mode: 'misto', // 'multiplicacao' | 'trigonometria' | 'misto'
+            questions: [],
+            currentIndex: 0,
+            score: 0,
+            hits: 0,
+            streak: 0,
+            intactLayers: MAX_WALL_LAYERS, // Começa com 5 camadas intactas
+            isAnswering: false
+        };
+
+        /**
+         * MOTOR DE ANIMAÇÃO DO RIO VIA requestAnimationFrame
+         * Evita 100% qualquer conflito de CSS transform com atributos SVG transform,
+         * garantindo que todos os peixes, bolhas e jacarés permaneçam dentro da água.
+         */
+        const riverEntities = {
+            // 2 peixes da tela inicial (viewBox 400x200, água a partir de y=152)
+            startFish: [
+                { id: 'start-fish-1', x: 75,  baseY: 175, minX: 35, maxX: 365, speed: 34, dir: 1,  amp: 2.0, freq: 2.4, phase: 0.0 },
+                { id: 'start-fish-2', x: 310, baseY: 188, minX: 35, maxX: 365, speed: 28, dir: -1, amp: 1.8, freq: 2.1, phase: 1.7 }
+            ],
+            // 3 peixes da tela principal do jogo (viewBox 420x340, água a partir de y=272)
+            gameFish: [
+                { id: 'game-fish-1', x: 310, baseY: 296, minX: 30, maxX: 390, speed: 42, dir: -1, amp: 2.4, freq: 2.6, phase: 0.4 },
+                { id: 'game-fish-2', x: 95,  baseY: 312, minX: 30, maxX: 390, speed: 34, dir: 1,  amp: 2.5, freq: 2.2, phase: 1.9 },
+                { id: 'game-fish-3', x: 215, baseY: 325, minX: 30, maxX: 390, speed: 29, dir: 1,  amp: 2.0, freq: 2.8, phase: 3.1 }
+            ],
+            // Bolhas subindo dentro das áreas recortadas da água
+            bubbles: [
+                { id: 'start-bubble-1', baseX: 95,  y: 192, minY: 155, maxY: 195, speed: 12, sway: 3, phase: 0.0 },
+                { id: 'start-bubble-2', baseX: 295, y: 180, minY: 155, maxY: 195, speed: 10, sway: 2.5, phase: 1.5 },
+                { id: 'game-bubble-1',  baseX: 118, y: 326, minY: 276, maxY: 334, speed: 15, sway: 3.5, phase: 0.3 },
+                { id: 'game-bubble-2',  baseX: 292, y: 312, minY: 276, maxY: 334, speed: 13, sway: 3.0, phase: 1.8 },
+                { id: 'game-bubble-3',  baseX: 205, y: 332, minY: 276, maxY: 334, speed: 11, sway: 2.5, phase: 2.7 },
+                { id: 'game-bubble-4',  baseX: 62,  y: 300, minY: 276, maxY: 334, speed: 14, sway: 3.0, phase: 4.1 }
+            ]
+        };
+
+        let lastFrameTime = null;
+
+        function animateRiver(timestamp) {
+            if (!lastFrameTime) lastFrameTime = timestamp;
+            const dt = Math.min((timestamp - lastFrameTime) / 1000, 0.05); // Limita dt em pausas de aba
+            lastFrameTime = timestamp;
+            const t = timestamp / 1000;
+
+            // Atualiza peixes da tela inicial e do jogo usando SVG transform direto
+            const updateFishList = (list) => {
+                for (let i = 0; i < list.length; i++) {
+                    const f = list[i];
+                    const el = document.getElementById(f.id);
+                    if (!el) continue;
+
+                    f.x += f.speed * f.dir * dt;
+                    if (f.x >= f.maxX) {
+                        f.x = f.maxX;
+                        f.dir = -1;
+                    } else if (f.x <= f.minX) {
+                        f.x = f.minX;
+                        f.dir = 1;
+                    }
+
+                    const y = f.baseY + Math.sin(t * f.freq + f.phase) * f.amp;
+                    el.setAttribute('transform', 'translate(' + f.x.toFixed(2) + ', ' + y.toFixed(2) + ') scale(' + f.dir + ', 1)');
+                }
+            };
+
+            updateFishList(riverEntities.startFish);
+            updateFishList(riverEntities.gameFish);
+
+            // Atualiza bolhas subindo na água
+            for (let i = 0; i < riverEntities.bubbles.length; i++) {
+                const b = riverEntities.bubbles[i];
+                const el = document.getElementById(b.id);
+                if (!el) continue;
+
+                b.y -= b.speed * dt;
+                if (b.y < b.minY) {
+                    b.y = b.maxY;
+                }
+                const cx = b.baseX + Math.sin(t * 2.2 + b.phase) * b.sway;
+                el.setAttribute('cx', cx.toFixed(2));
+                el.setAttribute('cy', b.y.toFixed(2));
+            }
+
+            // Movimento suave das ondas frontais translúcidas
+            const startWave = document.getElementById('start-front-wave');
+            if (startWave) {
+                const wx = Math.sin(t * 1.1) * 14;
+                startWave.setAttribute('transform', 'translate(' + wx.toFixed(2) + ', 0)');
+            }
+
+            const gameWave = document.getElementById('game-front-wave');
+            if (gameWave) {
+                const wx = Math.sin(t * 1.05) * 18;
+                gameWave.setAttribute('transform', 'translate(' + wx.toFixed(2) + ', 0)');
+            }
+
+            // Leve flutuação dos jacarés na água (sem virar de costas para a menina)
+            const leftBob = Math.sin(t * 1.35) * 1.6;
+            const rightBob = Math.sin(t * 1.35 + 1.4) * 1.6;
+
+            const cLB = document.getElementById('croc-left-body');
+            const cLH = document.getElementById('croc-left-head');
+            if (cLB && cLH) {
+                const tr = 'translate(0, ' + leftBob.toFixed(2) + ')';
+                cLB.setAttribute('transform', tr);
+                cLH.setAttribute('transform', tr);
+            }
+
+            const cRB = document.getElementById('croc-right-body');
+            const cRH = document.getElementById('croc-right-head');
+            if (cRB && cRH) {
+                const tr = 'translate(0, ' + rightBob.toFixed(2) + ')';
+                cRB.setAttribute('transform', tr);
+                cRH.setAttribute('transform', tr);
+            }
+
+            const sLB = document.getElementById('start-croc-left-body');
+            const sLH = document.getElementById('start-croc-left-head');
+            if (sLB && sLH) {
+                const tr = 'translate(0, ' + (leftBob * 0.7).toFixed(2) + ')';
+                sLB.setAttribute('transform', tr);
+                sLH.setAttribute('transform', tr);
+            }
+
+            const sRB = document.getElementById('start-croc-right-body');
+            const sRH = document.getElementById('start-croc-right-head');
+            if (sRB && sRH) {
+                const tr = 'translate(0, ' + (rightBob * 0.7).toFixed(2) + ')';
+                sRB.setAttribute('transform', tr);
+                sRH.setAttribute('transform', tr);
+            }
+
+            requestAnimationFrame(animateRiver);
+        }
+
+        /**
+         * BANCO DE QUESTÕES DE RAZÕES TRIGONOMÉTRICAS
+         * Inclui ângulos notáveis (30°, 45°, 60°), definições e cálculos em triângulos retângulos.
+         */
+        const TRIG_BANK = [
+            {
+                topic: 'Razões Trigonométricas',
+                text: 'Em um triângulo retângulo, qual é a razão que define o Seno (sen θ)?',
+                diagram: { angle: 'θ', opp: 'Cat. Oposto', adj: 'Cat. Adjacente', hyp: 'Hipotenusa' },
+                options: ['Cateto Oposto / Hipotenusa', 'Cateto Adjacente / Hipotenusa', 'Cateto Oposto / Cateto Adjacente', 'Hipotenusa / Cateto Oposto'],
+                correct: 0,
+                explanation: 'Seno é a razão entre o Cateto Oposto e a Hipotenusa.'
+            },
+            {
+                topic: 'Razões Trigonométricas',
+                text: 'Em um triângulo retângulo, como calculamos o Cosseno (cos θ)?',
+                diagram: { angle: 'θ', opp: 'CO', adj: 'CA', hyp: 'HIP' },
+                options: ['Cateto Adjacente / Hipotenusa', 'Cateto Oposto / Hipotenusa', 'Cateto Adjacente / Cateto Oposto', 'Hipotenusa / Cateto Adjacente'],
+                correct: 0,
+                explanation: 'Cosseno é a razão entre o Cateto Adjacente e a Hipotenusa.'
+            },
+            {
+                topic: 'Razões Trigonométricas',
+                text: 'Qual razão trigonométrica relaciona o Cateto Oposto dividido pelo Cateto Adjacente?',
+                diagram: { angle: 'θ', opp: 'CO', adj: 'CA', hyp: 'HIP' },
+                options: ['Tangente (tg θ)', 'Seno (sen θ)', 'Cosseno (cos θ)', 'Secante (sec θ)'],
+                correct: 0,
+                explanation: 'A Tangente (tg θ) é dada por Cateto Oposto / Cateto Adjacente.'
+            },
+            {
+                topic: 'Ângulos Notáveis',
+                text: 'Qual é o valor exato de sen(30°)?',
+                diagram: { angle: '30°', opp: '1', adj: '√3', hyp: '2' },
+                options: ['1/2 (0,5)', '√3 / 2', '√2 / 2', '1'],
+                correct: 0,
+                explanation: 'Na tabela dos ângulos notáveis, sen(30°) = 1/2.'
+            },
+            {
+                topic: 'Ângulos Notáveis',
+                text: 'Qual é o valor exato de cos(60°)?',
+                diagram: { angle: '60°', opp: '√3', adj: '1', hyp: '2' },
+                options: ['1/2 (0,5)', '√3 / 2', '√2 / 2', '√3'],
+                correct: 0,
+                explanation: 'Como 30° e 60° são complementares, cos(60°) = sen(30°) = 1/2.'
+            },
+            {
+                topic: 'Ângulos Notáveis',
+                text: 'Qual é o valor da tangente de 45° (tg 45°)?',
+                diagram: { angle: '45°', opp: 'x', adj: 'x', hyp: 'x√2' },
+                options: ['1', '0', '√2 / 2', '√3'],
+                correct: 0,
+                explanation: 'Em um triângulo retângulo isósceles (45°), os catetos são iguais, logo tg(45°) = 1.'
+            },
+            {
+                topic: 'Cálculo Trigonométrico',
+                text: 'Um triângulo retângulo tem Cateto Oposto = 6 e Hipotenusa = 10. Quanto vale sen(θ)?',
+                diagram: { angle: 'θ', opp: '6', adj: '8', hyp: '10' },
+                options: ['0,6 (3/5)', '0,8 (4/5)', '0,75 (3/4)', '1,66'],
+                correct: 0,
+                explanation: 'sen(θ) = Cateto Oposto / Hipotenusa = 6 / 10 = 0,6.'
+            },
+            {
+                topic: 'Cálculo Trigonométrico',
+                text: 'Sabendo que Cateto Adjacente = 12 e Hipotenusa = 15, qual o valor de cos(θ)?',
+                diagram: { angle: 'θ', opp: '9', adj: '12', hyp: '15' },
+                options: ['0,8 (4/5)', '0,6 (3/5)', '0,75 (3/4)', '1,25'],
+                correct: 0,
+                explanation: 'cos(θ) = Cateto Adjacente / Hipotenusa = 12 / 15 = 4/5 = 0,8.'
+            },
+            {
+                topic: 'Cálculo Trigonométrico',
+                text: 'Se o Cateto Oposto mede 9 e o Cateto Adjacente mede 12, quanto vale tg(θ)?',
+                diagram: { angle: 'θ', opp: '9', adj: '12', hyp: '15' },
+                options: ['0,75 (3/4)', '0,6 (3/5)', '0,8 (4/5)', '1,33 (4/3)'],
+                correct: 0,
+                explanation: 'tg(θ) = Cateto Oposto / Cateto Adjacente = 9 / 12 = 3/4 = 0,75.'
+            },
+            {
+                topic: 'Ângulos Notáveis',
+                text: 'Qual é o valor de sen(45°) e cos(45°)?',
+                diagram: { angle: '45°', opp: '1', adj: '1', hyp: '√2' },
+                options: ['√2 / 2', '1 / 2', '√3 / 2', '√3 / 3'],
+                correct: 0,
+                explanation: 'Para o ângulo de 45°, tanto o seno quanto o cosseno valem √2 / 2.'
+            },
+            {
+                topic: 'Aplicação Prática',
+                text: 'Uma escada de 8 m encosta em um muro formando 30° com o chão. Qual a altura alcançada? (sen 30° = 0,5)',
+                diagram: { angle: '30°', opp: 'h = ?', adj: 'chão', hyp: '8 m' },
+                options: ['4 metros', '8 metros', '2 metros', '6 metros'],
+                correct: 0,
+                explanation: 'sen(30°) = h / 8 → 0,5 = h / 8 → h = 4 metros.'
+            },
+            {
+                topic: 'Ângulos Notáveis',
+                text: 'Qual é o valor exato de tg(60°)?',
+                diagram: { angle: '60°', opp: '√3', adj: '1', hyp: '2' },
+                options: ['√3', '√3 / 3', '1', '1 / 2'],
+                correct: 0,
+                explanation: 'Na tabela trigonométrica, tg(60°) = sen(60°)/cos(60°) = √3.'
+            }
+        ];
+
+        /**
+         * GERADOR DINÂMICO DE QUESTÕES DE MULTIPLICAÇÃO
+         * Gera contas variadas de tabuada, dezenas e multiplicação aplicada.
+         */
+        function generateMultiplicationQuestion() {
+            const types = ['tabuada', 'dezena', 'fator_oculto', 'problema'];
+            const type = types[Math.floor(Math.random() * types.length)];
+
+            let a, b, answer, text, explanation;
+
+            if (type === 'tabuada') {
+                a = Math.floor(Math.random() * 8) + 3; // 3 a 10
+                b = Math.floor(Math.random() * 8) + 4; // 4 a 11
+                answer = a * b;
+                text = `Quanto é ${a} × ${b}?`;
+                explanation = `${a} multiplicado por ${b} é igual a ${answer}.`;
+            } else if (type === 'dezena') {
+                a = Math.floor(Math.random() * 9) + 11; // 11 a 19
+                b = Math.floor(Math.random() * 6) + 3;  // 3 a 8
+                answer = a * b;
+                text = `Calcule o produto: ${a} × ${b}`;
+                explanation = `${a} × ${b} = (10 × ${b}) + (${a - 10} × ${b}) = ${answer}.`;
+            } else if (type === 'fator_oculto') {
+                a = Math.floor(Math.random() * 8) + 4;
+                answer = Math.floor(Math.random() * 8) + 3;
+                const prod = a * answer;
+                text = `Qual número completa a conta: ${a} × ? = ${prod}`;
+                explanation = `Como ${prod} ÷ ${a} = ${answer}, o fator oculto é ${answer}.`;
+            } else {
+                a = Math.floor(Math.random() * 6) + 4;
+                b = Math.floor(Math.random() * 7) + 5;
+                answer = a * b;
+                text = `Um muro tem ${a} fileiras com ${b} tijolos brancos cada. Quantos tijolos há no total?`;
+                explanation = `${a} fileiras × ${b} tijolos = ${answer} tijolos no total.`;
+            }
+
+            // Gerar 3 distratores plausíveis
+            const distractors = new Set();
+            while (distractors.size < 3) {
+                const offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? 1 : -1);
+                const candidate = answer + offset * (Math.random() < 0.5 ? 1 : (a || 2));
+                if (candidate > 0 && candidate !== answer) {
+                    distractors.add(candidate);
+                }
+            }
+
+            const allOptions = [answer, ...Array.from(distractors)];
+            // Embaralhar alternativas
+            for (let i = allOptions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+            }
+
+            return {
+                topic: 'Multiplicação',
+                text,
+                diagram: null,
+                options: allOptions.map(String),
+                correct: allOptions.indexOf(answer),
+                explanation
+            };
+        }
+
+        /**
+         * MONTA A LISTA DE 10 PERGUNTAS PARA A PARTIDA
+         */
+        function buildSessionQuestions(mode) {
+            const list = [];
+            const shuffledTrig = [...TRIG_BANK].sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+                if (mode === 'multiplicacao') {
+                    list.push(generateMultiplicationQuestion());
+                } else if (mode === 'trigonometria') {
+                    list.push(shuffledTrig[i % shuffledTrig.length]);
+                } else {
+                    // Modo Misto: alterna entre Multiplicação e Razões Trigonométricas
+                    if (i % 2 === 0) {
+                        list.push(generateMultiplicationQuestion());
+                    } else {
+                        list.push(shuffledTrig[Math.floor(i / 2) % shuffledTrig.length]);
+                    }
+                }
+            }
+            return list;
+        }
+
+        /**
+         * ATUALIZA DINAMICAMENTE AS PUPILAS DOS DOIS JACARÉS PARA OLHAREM PARA A MENINA
+         * Calcula o ângulo entre cada olho e a posição atual da menina (210, girlY - 35).
+         * @param {number} girlY - Posição vertical atual (Y) do grupo da menina no SVG
+         */
+        function updateCrocEyes(girlY) {
+            const targetX = 210;
+            const targetY = girlY - 35;
+
+            const eyes = [
+                { id: 'croc-left-pupil-1',  ex: 90,  ey: 262, maxOffset: 1.55 },
+                { id: 'croc-left-pupil-2',  ex: 101, ey: 264, maxOffset: 1.65 },
+                { id: 'croc-right-pupil-1', ex: 330, ey: 262, maxOffset: 1.55 },
+                { id: 'croc-right-pupil-2', ex: 319, ey: 264, maxOffset: 1.65 }
+            ];
+
+            eyes.forEach(({ id, ex, ey, maxOffset }) => {
+                const pupil = document.getElementById(id);
+                if (!pupil) return;
+                const angle = Math.atan2(targetY - ey, targetX - ex);
+                const px = ex + Math.cos(angle) * maxOffset;
+                const py = ey + Math.sin(angle) * maxOffset;
+                pupil.setAttribute('cx', px.toFixed(2));
+                pupil.setAttribute('cy', py.toFixed(2));
+            });
+        }
+
+        /**
+         * INICIA UMA NOVA PARTIDA
+         */
+        function startGame(selectedMode) {
+            state = {
+                mode: selectedMode,
+                questions: buildSessionQuestions(selectedMode),
+                currentIndex: 0,
+                score: 0,
+                hits: 0,
+                streak: 0,
+                intactLayers: MAX_WALL_LAYERS,
+                isAnswering: false
+            };
+
+            const modeLabels = {
+                multiplicacao: 'Multiplicação',
+                trigonometria: 'Trigonometria',
+                misto: 'Desafio Misto'
+            };
+            document.getElementById('mode-badge').textContent = modeLabels[selectedMode];
+
+            resetSceneVisuals();
+            updateHUD();
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('game-hud').classList.remove('hidden');
+            document.getElementById('play-screen').classList.remove('hidden');
+            document.getElementById('play-screen').classList.add('flex');
+
+            renderQuestion();
+        }
+
+        /**
+         * RESTAURA O MURO BRANCO E A MENINA PARA O ESTADO INICIAL
+         */
+        function resetSceneVisuals() {
+            for (let i = 1; i <= MAX_WALL_LAYERS; i++) {
+                const layer = document.getElementById(`wall-layer-${i}`);
+                layer.classList.remove('layer-crumbling', 'hidden');
+                layer.style.opacity = '1';
+                layer.style.transform = '';
+            }
+
+            const girlGroup = document.getElementById('girl-group');
+            girlGroup.style.transform = `translate(210px, ${BASE_GIRL_Y}px)`;
+
+            const girlBody = document.getElementById('girl-body-anim');
+            girlBody.classList.remove('girl-water-anim');
+            girlBody.classList.add('girl-idle-anim');
+
+            document.getElementById('girl-legs').classList.remove('hidden');
+            setGirlExpression('normal');
+
+            // Atualiza os olhos dos dois jacarés para acompanharem a menina no topo do muro
+            updateCrocEyes(BASE_GIRL_Y);
+
+            const splash = document.getElementById('water-splash');
+            splash.classList.add('hidden');
+            splash.classList.remove('splash-anim');
+        }
+
+        /**
+         * CONTROLA A EXPRESSÃO FACIAL DA MENINA
+         * @param {'normal'|'scared'|'ko'} expr
+         */
+        function setGirlExpression(expr) {
+            document.getElementById('face-normal').classList.toggle('hidden', expr !== 'normal');
+            document.getElementById('face-scared').classList.toggle('hidden', expr !== 'scared');
+            document.getElementById('face-ko').classList.toggle('hidden', expr !== 'ko');
+        }
+
+        /**
+         * ATUALIZA BARRA SUPERIOR (PONTOS, QUESTÃO E BLOCOS DO MURO)
+         */
+        function updateHUD() {
+            document.getElementById('question-counter').textContent = Math.min(state.currentIndex + 1, TOTAL_QUESTIONS);
+            document.getElementById('score-display').textContent = state.score;
+
+            const progressPct = (state.currentIndex / TOTAL_QUESTIONS) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPct}%`;
+
+            const wallBlocks = document.getElementById('wall-hearts').children;
+            for (let i = 0; i < MAX_WALL_LAYERS; i++) {
+                if (i < state.intactLayers) {
+                    wallBlocks[i].className = 'w-3.5 h-3.5 rounded-sm bg-white border-2 border-blue-500 transition-all';
+                } else {
+                    wallBlocks[i].className = 'w-3.5 h-3.5 rounded-sm bg-red-100 border border-red-300 opacity-50 transition-all';
+                }
+            }
+
+            const streakBadge = document.getElementById('streak-badge');
+            if (state.streak >= 2) {
+                streakBadge.textContent = `Sequência: ${state.streak}x 🔥`;
+                streakBadge.classList.remove('hidden');
+            } else {
+                streakBadge.classList.add('hidden');
+            }
+        }
+
+        /**
+         * EXIBE A PERGUNTA ATUAL NA TELA
+         */
+        function renderQuestion() {
+            state.isAnswering = false;
+            const q = state.questions[state.currentIndex];
+
+            document.getElementById('question-topic').textContent = q.topic;
+            document.getElementById('question-text').textContent = q.text;
+            document.getElementById('feedback-text').textContent = 'Selecione a alternativa correta.';
+            document.getElementById('feedback-text').className = 'text-slate-500';
+
+            const diagramBox = document.getElementById('trig-diagram-box');
+            if (q.diagram) {
+                diagramBox.classList.remove('hidden');
+                document.getElementById('lbl-angle').textContent = q.diagram.angle;
+                document.getElementById('lbl-opp').textContent = q.diagram.opp;
+                document.getElementById('lbl-adj').textContent = q.diagram.adj;
+                document.getElementById('lbl-hyp').textContent = q.diagram.hyp;
+            } else {
+                diagramBox.classList.add('hidden');
+            }
+
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white font-bold text-slate-700 text-sm sm:text-base flex items-center gap-3 cursor-pointer';
+                btn.innerHTML = `
+                    <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 text-xs font-extrabold flex items-center justify-center shrink-0">${letters[idx]}</span>
+                    <span class="leading-tight">${optText}</span>
+                `;
+                btn.onclick = () => handleAnswer(idx, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        /**
+         * PROCESSA A RESPOSTA ESCOLHIDA PELO JOGADOR
+         */
+        function handleAnswer(selectedIndex, clickedBtn) {
+            if (state.isAnswering) return;
+            state.isAnswering = true;
+
+            const q = state.questions[state.currentIndex];
+            const buttons = document.getElementById('options-grid').querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            const isCorrect = selectedIndex === q.correct;
+
+            if (isCorrect) {
+                clickedBtn.classList.add('option-correct');
+                state.hits++;
+                state.streak++;
+                const bonus = state.streak >= 3 ? 150 : 100;
+                state.score += bonus;
+
+                setGirlExpression('normal');
+                showSceneToast(`+${bonus} pts! Muro seguro!`, 'bg-emerald-500 text-white');
+
+                const fb = document.getElementById('feedback-text');
+                fb.textContent = `Correto! ${q.explanation}`;
+                fb.className = 'text-emerald-600 font-bold';
+
+                updateHUD();
+
+                setTimeout(() => {
+                    advanceNextStep();
+                }, 1300);
+
+            } else {
+                clickedBtn.classList.add('option-wrong');
+                buttons[q.correct].classList.add('option-correct');
+
+                state.streak = 0;
+                const layerToBreak = state.intactLayers; // Quebra de cima para baixo (5, 4, 3, 2, 1)
+                state.intactLayers--;
+
+                const fb = document.getElementById('feedback-text');
+                fb.textContent = `Ops! ${q.explanation}`;
+                fb.className = 'text-red-600 font-bold';
+
+                updateHUD();
+                crumbleWallLayer(layerToBreak);
+            }
+        }
+
+        /**
+         * ANIMA A QUEBRA DA CAMADA DO MURO E A DESCIDA/QUEDA DA MENINA
+         */
+        function crumbleWallLayer(layerNumber) {
+            const scene = document.getElementById('game-scene');
+            scene.classList.remove('shake-effect');
+            void scene.offsetWidth; // Força reflow para reiniciar animação
+            scene.classList.add('shake-effect');
+
+            const layerEl = document.getElementById(`wall-layer-${layerNumber}`);
+            if (layerEl) {
+                layerEl.classList.add('layer-crumbling');
+            }
+
+            const girlGroup = document.getElementById('girl-group');
+
+            if (state.intactLayers > 0) {
+                setGirlExpression('scared');
+                showSceneToast('Cuidado! O muro rachou!', 'bg-red-500 text-white');
+
+                const brokenCount = MAX_WALL_LAYERS - state.intactLayers;
+                const newY = BASE_GIRL_Y + (brokenCount * LAYER_HEIGHT);
+                girlGroup.style.transform = `translate(210px, ${newY}px)`;
+                updateCrocEyes(newY);
+
+                setTimeout(() => {
+                    if (state.intactLayers > 0) {
+                        setGirlExpression('normal');
+                    }
+                    advanceNextStep();
+                }, 1600);
+
+            } else {
+                // TODAS AS CAMADAS QUEBRARAM -> A MENINA CAI NO RIO COM 'X' NOS OLHOS
+                showSceneToast('O muro desabou!', 'bg-red-600 text-white');
+
+                girlGroup.style.transform = `translate(210px, 294px)`;
+                updateCrocEyes(294);
+
+                setTimeout(() => {
+                    const splash = document.getElementById('water-splash');
+                    splash.classList.remove('hidden');
+                    splash.classList.add('splash-anim');
+
+                    document.getElementById('girl-legs').classList.add('hidden');
+                    setGirlExpression('ko');
+
+                    const girlBody = document.getElementById('girl-body-anim');
+                    girlBody.classList.remove('girl-idle-anim');
+                    girlBody.classList.add('girl-water-anim');
+                }, 380);
+
+                setTimeout(() => {
+                    showEndScreen(false);
+                }, 2200);
+            }
+        }
+
+        /**
+         * AVANÇA PARA A PRÓXIMA QUESTÃO OU FINALIZA COM VITÓRIA
+         */
+        function advanceNextStep() {
+            if (state.intactLayers <= 0) return;
+
+            state.currentIndex++;
+            if (state.currentIndex >= TOTAL_QUESTIONS) {
+                document.getElementById('progress-bar').style.width = '100%';
+                showEndScreen(true);
+            } else {
+                updateHUD();
+                renderQuestion();
+            }
+        }
+
+        /**
+         * EXIBE MENSAGEM RÁPIDA FLUTUANTE NO CENÁRIO
+         */
+        function showSceneToast(msg, classes) {
+            const toast = document.getElementById('scene-toast');
+            toast.textContent = msg;
+            toast.className = `pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-sm transition-opacity duration-300 opacity-100 ${classes}`;
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 1200);
+        }
+
+        /**
+         * EXIBE A TELA FINAL DE VITÓRIA OU DERROTA
+         */
+        function showEndScreen(isVictory) {
+            document.getElementById('play-screen').classList.add('hidden');
+            document.getElementById('play-screen').classList.remove('flex');
+            document.getElementById('game-hud').classList.add('hidden');
+
+            const endScreen = document.getElementById('end-screen');
+            endScreen.classList.remove('hidden');
+
+            const illu = document.getElementById('end-illustration');
+            const title = document.getElementById('end-title');
+            const subtitle = document.getElementById('end-subtitle');
+
+            if (isVictory) {
+                illu.className = 'w-32 h-32 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mb-5';
+                illu.innerHTML = `
+                    <svg viewBox="0 0 100 100" class="w-24 h-24">
+                        <circle cx="50" cy="52" r="26" fill="#FDBA74"/>
+                        <path d="M24,50 C24,22 76,22 76,50 C68,40 58,38 50,43 C42,38 32,40 24,50 Z" fill="#78350F"/>
+                        <circle cx="41" cy="52" r="3.5" fill="#1E293B"/>
+                        <circle cx="59" cy="52" r="3.5" fill="#1E293B"/>
+                        <path d="M40,62 Q50,72 60,62" stroke="#1E293B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                        <circle cx="72" cy="30" r="10" fill="#10B981"/>
+                        <path d="M68,30 L71,33 L77,27" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    </svg>
+                `;
+                title.textContent = 'Parabéns! Você Salvou a Menina!';
+                subtitle.textContent = 'Você dominou os cálculos e manteve o muro de pé bem longe dos jacarés e piranhas!';
+            } else {
+                illu.className = 'w-32 h-32 rounded-full bg-red-50 border-4 border-red-200 flex items-center justify-center mb-5';
+                illu.innerHTML = `
+                    <svg viewBox="0 0 100 100" class="w-24 h-24">
+                        <rect x="10" y="68" width="80" height="22" rx="11" fill="#38BDF8" opacity="0.4"/>
+                        <circle cx="50" cy="52" r="26" fill="#FDBA74"/>
+                        <path d="M24,50 C24,22 76,22 76,50 C68,40 58,38 50,43 C42,38 32,40 24,50 Z" fill="#78350F"/>
+                        <!-- Olhos X -->
+                        <line x1="36" y1="47" x2="45" y2="56" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="45" y1="47" x2="36" y2="56" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="55" y1="47" x2="64" y2="56" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="64" y1="47" x2="55" y2="56" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round"/>
+                        <path d="M41,65 Q45.5,61 50,65 Q54.5,69 59,65" stroke="#1E293B" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    </svg>
+                `;
+                title.textContent = 'Splash! O Muro Desmoronou!';
+                subtitle.textContent = 'Todas as camadas do muro quebraram e ela caiu no rio! Tente novamente para salvá-la.';
+            }
+
+            document.getElementById('final-score').textContent = state.score;
+            document.getElementById('final-hits').textContent = `${state.hits}/${TOTAL_QUESTIONS}`;
+            document.getElementById('final-wall').textContent = `${state.intactLayers}/${MAX_WALL_LAYERS}`;
+        }
+
+        function restartSameMode() {
+            startGame(state.mode);
+        }
+
+        function returnToMenu() {
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('play-screen').classList.add('hidden');
+            document.getElementById('game-hud').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        // Inicia o loop suave do rio (peixes, bolhas, ondas e flutuação dos jacarés) ao carregar a página
+        window.onload = function () {
+            updateCrocEyes(BASE_GIRL_Y);
+            requestAnimationFrame(animateRiver);
+        };
+    </script>
+</body>
+</html>
